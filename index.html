@@ -2,10 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Donald Kerr — Journey Booking Request (V11)</title>
+<title>Donald Kerr — Journey Booking Request (V12)</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#203047;background:#f3f6fa}*{box-sizing:border-box}body{margin:0;padding:20px}main{max-width:850px;margin:auto}header{margin-bottom:20px}h1{font-size:1.7rem;margin:0 0 8px}h2{font-size:1.15rem;margin:0 0 14px}.sub{color:#516178;margin:0}.panel{background:white;border:1px solid #dbe2eb;border-radius:12px;padding:20px;margin:14px 0;box-shadow:0 2px 8px #132b4710}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.full{grid-column:1/-1}label{display:block;font-weight:650;font-size:.94rem;margin-bottom:5px}input,select,textarea{font:inherit;width:100%;padding:11px;border:1px solid #aebacc;border-radius:7px;background:#fff;color:#203047}textarea{min-height:75px;resize:vertical}.help{font-size:.85rem;color:#53647b;margin:5px 0 0}button{font:inherit;cursor:pointer;border-radius:8px;padding:12px 16px;border:1px solid #a5b6c8;background:#fff;color:#173452;font-weight:650}button.primary{background:#145eaa;border-color:#145eaa;color:#fff}button.danger{color:#9a2b2b;border-color:#d9b5b5}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.journeyhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.journeyhead h2{margin:0}.journeyhead button{padding:7px 10px}.preview{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fb;border:1px solid #dce4ee;padding:15px;border-radius:8px;font:14px/1.55 ui-monospace,Consolas,monospace}.notice{padding:12px 15px;border-radius:8px;background:#edf5fc;color:#264c72}.status{min-height:1.5em;color:#245f34;font-weight:600}@media(max-width:600px){body{padding:12px}.panel{padding:15px}.grid{grid-template-columns:1fr}.full{grid-column:auto}h1{font-size:1.4rem}}
-.address-combo{position:relative;display:flex;gap:5px}.address-combo input{min-width:0;flex:1}.address-toggle{padding:8px 12px;flex:none;font-size:1.15rem}.address-options{position:absolute;top:100%;left:0;right:0;z-index:20;background:white;border:1px solid #9caec5;border-radius:7px;box-shadow:0 5px 16px #10203030;max-height:220px;overflow-y:auto;margin-top:3px}.address-options[hidden]{display:none}.address-options button{display:block;text-align:left;width:100%;border:0;border-radius:0;padding:11px;font-weight:400;overflow-wrap:anywhere}.address-options button:hover,.address-options button:focus{background:#e7f1fc}</style>
+.address-combo{position:relative;display:flex;gap:5px}.address-combo input{min-width:0;flex:1}.address-toggle{padding:8px 12px;flex:none;font-size:1.15rem}.address-options{position:absolute;top:100%;left:0;right:0;z-index:20;background:white;border:1px solid #9caec5;border-radius:7px;box-shadow:0 5px 16px #10203030;max-height:220px;overflow-y:auto;margin-top:3px}.address-options[hidden]{display:none}.address-options button{display:block;text-align:left;width:100%;border:0;border-radius:0;padding:11px;font-weight:400;overflow-wrap:anywhere}.address-options button:hover,.address-options button:focus{background:#e7f1fc}
+/* Original booking identification: prominent but not an error */
+.original-heading{grid-column:1/-1;padding:11px 13px;background:#fff0f0;border-left:5px solid #b4232c;border-radius:6px;color:#8b1c24;font-weight:750}
+.original-field{background:#fff1f1;border:2px solid #c52e38;border-radius:9px;padding:12px}
+.original-field label{color:#921c27}
+.original-field input{background:#fffafa;border:2px solid #bb2933;font-weight:650}
+.original-field[hidden],.original-heading[hidden],.revised-field[hidden]{display:none!important}
+</style>
 </head>
 <body><main>
 <header><h1>Donald Kerr — Journey Booking Request</h1><p class="sub">Prepared for Jo McBride · Add one or more journeys, then prepare an email for the transport operator.</p></header>
@@ -16,8 +23,11 @@
 </main>
 
 <template id="journey-template"><section class="panel journey"><div class="journeyhead"><h2>Journey <span class="num"></span></h2><button class="danger remove" type="button">Remove</button></div><div class="grid">
-<div><label>Journey date *</label><input class="date" type="date" required></div>
-<div><label>Pickup Time (24-hour clock) *</label><input class="time" type="time" required></div>
+<div class="original-heading" hidden>Original booking details — please complete these first.</div>
+<div class="original-field" hidden><label>Original Booking Date *</label><input class="original-date" type="date"></div>
+<div class="original-field" hidden><label>Original Pickup Time (24-hour clock) *</label><input class="original-time" type="time"></div>
+<div class="revised-field"><label class="date-label">Journey date *</label><input class="date" type="date" required></div>
+<div class="revised-field"><label class="time-label">Pickup Time (24-hour clock) *</label><input class="time" type="time" required></div>
 <div><label>Flight / train number (optional)</label><input class="service" placeholder="e.g. BA1234"></div>
 <div aria-hidden="true"></div>
 <div><label>From *</label><div class="address-combo"><input class="from" value="1 Smeaton Grove, Inveresk, Musselburgh, Midlothian, EH21 7TW" placeholder="Select or type any address" autocomplete="off" required><button type="button" class="address-toggle" aria-label="Choose From address" aria-expanded="false">▾</button><div class="address-options" hidden></div></div></div>
@@ -35,12 +45,77 @@ function clean(value){return String(value||'').replace(/\s+/g,' ').trim()}
 function route(el,side){return clean(field(el,side).value)||'[address not entered]'}
 function setupAddresses(el){for(const combo of el.querySelectorAll('.address-combo')){const input=combo.querySelector('input'),toggle=combo.querySelector('.address-toggle'),menu=combo.querySelector('.address-options');const blank=document.createElement('button');blank.type='button';blank.textContent=' ';blank.setAttribute('aria-label','Blank — type a new address');blank.style.minHeight='39px';blank.addEventListener('click',()=>{input.value='';close();input.dispatchEvent(new Event('input',{bubbles:true}));input.focus()});menu.append(blank);for(const address of savedAddresses){const option=document.createElement('button');option.type='button';option.textContent=address;option.addEventListener('click',()=>{input.value=address;close();input.dispatchEvent(new Event('input',{bubbles:true}));input.focus()});menu.append(option)}function close(){menu.hidden=true;toggle.setAttribute('aria-expanded','false')}function open(){for(const other of document.querySelectorAll('.address-options'))other.hidden=true;for(const other of document.querySelectorAll('.address-toggle'))other.setAttribute('aria-expanded','false');menu.hidden=false;toggle.setAttribute('aria-expanded','true')}toggle.addEventListener('click',()=>menu.hidden?open():close());input.addEventListener('keydown',e=>{if(e.key==='Escape')close()});input.addEventListener('input',close);combo.addEventListener('focusout',()=>setTimeout(()=>{if(!combo.contains(document.activeElement))close()},0))}}
 function mode(){return document.getElementById('requestType').value}
-function updateMode(){const m=mode();document.getElementById('typeHint').textContent=m==='new'?'Enter the details of the new journey or journeys.':m==='change'?'Enter the requested journey details. If needed, use Notes to identify the original booking by its date and pickup time. Changes are requests only, not confirmed amendments.':'Enter the existing journey details to identify each booking you wish to cancel. Cancellations are requests only, not confirmed cancellations.';document.getElementById('add').textContent=m==='new'?'+ Add another journey':m==='change'?'+ Add another change':'+ Add another cancellation';for(const el of holder.children){el.querySelector('.notes-label').textContent=m==='change'?'Notes — identify original booking if needed (optional)':'Notes (optional)'}}
+function updateMode(){
+ const m=mode();
+ document.getElementById('typeHint').textContent=m==='new'
+  ?'Enter the details of the new journey or journeys.'
+  :m==='change'
+   ?'Identify the original journey, then enter the revised date, time and journey details. This is a request, not a confirmed amendment.'
+   :'Enter the original booking date and pickup time for each cancellation request. This does not cancel a booking automatically.';
+ document.getElementById('add').textContent=m==='new'?'+ Add another journey':m==='change'?'+ Add another change':'+ Add another cancellation';
+ for(const el of holder.children){
+  for(const box of el.querySelectorAll('.original-field, .original-heading'))box.hidden=m==='new';
+  for(const box of el.querySelectorAll('.revised-field'))box.hidden=m==='cancel';
+  field(el,'original-date').required=m!=='new';
+  field(el,'original-time').required=m!=='new';
+  field(el,'date').required=m!=='cancel';
+  field(el,'time').required=m!=='cancel';
+  el.querySelector('.date-label').textContent=m==='change'?'New Journey Date *':'Journey date *';
+  el.querySelector('.time-label').textContent=m==='change'?'New Pickup Time (24-hour clock) *':'Pickup Time (24-hour clock) *';
+  el.querySelector('.notes-label').textContent='Notes (optional)';
+ }
+}
 function add(){const el=template.content.firstElementChild.cloneNode(true);holder.append(el);setupAddresses(el);updateMode();field(el,'remove').addEventListener('click',()=>{el.remove();refresh()});el.addEventListener('input',refresh);el.addEventListener('change',refresh);refresh()}
 function niceDate(value){if(!value)return '[date not entered]';const [y,m,d]=value.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
-function build(){const passenger=clean(document.getElementById('passenger').value)||'[passenger not entered]',requester=clean(document.getElementById('requester').value)||'[requester not entered]',mobile=clean(document.getElementById('mobile').value);const m=mode(),kind=m==='new'?'New Booking':m==='change'?'Change Existing Booking':'Cancel Existing Booking';const blocks=[`Request type: ${kind}`,`Booking request for: ${passenger}`,`Requested by: ${requester}`,`Passenger mobile: ${mobile||'[not supplied]'}`,''];[...holder.children].forEach((el,i)=>{blocks.push(`${m==='new'?'Journey':m==='change'?'Booking change':'Booking cancellation'} ${i+1}`,`Date: ${niceDate(field(el,'date').value)}`,`From: ${route(el,'from')}`,`To: ${route(el,'to')}`,`Pickup Time: ${field(el,'time').value||'[time not entered]'}`);const service=clean(field(el,'service').value),notes=clean(field(el,'notes').value);if(service)blocks.push(`Flight / train number: ${service}`);if(notes)blocks.push(`Notes: ${notes}`);blocks.push('')});blocks.push(m==='new'?'Please confirm availability and booking details.':m==='change'?'Please confirm whether the requested booking changes can be accommodated.':'Please confirm whether the booking cancellation has been accepted.');blocks.push('', 'Thank you.', '', 'Regards', '', 'Jo McBride', 'Assistant Company Secretary; EA to the CEO & CFO', 'D: 0116 402 9137');return {subject:`${passenger} — ${m==='new'?'Journey booking request':m==='change'?'Booking change request':'Booking cancellation request'}`,body:blocks.join('\n')}}
+function build(){
+ const passenger=clean(document.getElementById('passenger').value)||'[passenger not entered]';
+ const requester=clean(document.getElementById('requester').value)||'[requester not entered]';
+ const mobile=clean(document.getElementById('mobile').value);
+ const m=mode(),kind=m==='new'?'New Booking':m==='change'?'Change Existing Booking':'Cancel Existing Booking';
+ const blocks=[`Request type: ${kind}`,`Booking request for: ${passenger}`,`Requested by: ${requester}`,`Passenger mobile: ${mobile||'[not supplied]'}`,''];
+ [...holder.children].forEach((el,i)=>{
+  blocks.push(`${m==='new'?'Journey':m==='change'?'Booking change':'Booking cancellation'} ${i+1}`);
+  if(m!=='new'){
+   blocks.push(`Original Booking Date: ${niceDate(field(el,'original-date').value)}`);
+   blocks.push(`Original Pickup Time: ${field(el,'original-time').value||'[time not entered]'}`);
+  }
+  // Existing TBR V3 extractor expects Date and Pickup Time even for cancellations.
+  // For cancellations, repeat ORIGINAL details under those headings; never imply a new journey.
+  const date=m==='cancel'?field(el,'original-date').value:field(el,'date').value;
+  const time=m==='cancel'?field(el,'original-time').value:field(el,'time').value;
+  blocks.push(`Date: ${niceDate(date)}`,`From: ${route(el,'from')}`,`To: ${route(el,'to')}`,`Pickup Time: ${time||'[time not entered]'}`);
+  const service=clean(field(el,'service').value),notes=clean(field(el,'notes').value);
+  if(service)blocks.push(`Flight / train number: ${service}`);
+  if(notes)blocks.push(`Notes: ${notes}`);
+  blocks.push('');
+ });
+ blocks.push(m==='new'?'Please confirm availability and booking details.':m==='change'?'Please confirm whether the requested booking changes can be accommodated.':'Please confirm whether the booking cancellation has been accepted.');
+ blocks.push('', 'Thank you.', '', 'Regards', '', 'Jo McBride', 'Assistant Company Secretary; EA to the CEO & CFO', 'D: 0116 402 9137');
+ return {subject:`${passenger} — ${m==='new'?'Journey booking request':m==='change'?'Booking change request':'Booking cancellation request'}`,body:blocks.join('\n')};
+}
 function refresh(){[...holder.children].forEach((el,i)=>{field(el,'num').textContent=i+1;field(el,'remove').hidden=holder.children.length===1});updateMode();preview.textContent=build().body;status.textContent=''}
-function valid(){for(const input of [document.getElementById('passenger'),document.getElementById('requester'),...holder.querySelectorAll('.date,.time,.from,.to')]){if(!input.value.trim()){input.focus();input.reportValidity();status.textContent='Please complete the required fields first.';return false}}for(const el of holder.children){if(route(el,'from').toLowerCase()===route(el,'to').toLowerCase()){field(el,'to').focus();status.textContent='From and To must be different addresses.';return false}}return true}
+function valid(){
+ const m=mode();
+ const required=[document.getElementById('passenger'),document.getElementById('requester')];
+ for(const el of holder.children){
+  if(m!=='new')required.push(field(el,'original-date'),field(el,'original-time'));
+  if(m!=='cancel')required.push(field(el,'date'),field(el,'time'));
+  required.push(field(el,'from'),field(el,'to'));
+ }
+ for(const input of required){
+  if(!input.value.trim()){
+   input.focus();input.reportValidity();
+   status.textContent='Please complete the required fields first.';
+   return false;
+  }
+ }
+ for(const el of holder.children){
+  if(route(el,'from').toLowerCase()===route(el,'to').toLowerCase()){
+   field(el,'to').focus();status.textContent='From and To must be different addresses.';return false;
+  }
+ }
+ return true;
+}
 document.getElementById('add').addEventListener('click',add);document.getElementById('requestType').addEventListener('change',refresh);for(const id of ['passenger','requester','mobile'])document.getElementById(id).addEventListener('input',refresh);
 document.getElementById('email').addEventListener('click',()=>{if(!valid())return;const {subject,body}=build();const url=`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;if(url.length>1800)status.textContent='This is a long request. If the email is incomplete, use Copy Email Text instead.';window.location.href=url});
 document.getElementById('copy').addEventListener('click',async()=>{if(!valid())return;const {subject,body}=build(),message=`To: ${recipient}\nSubject: ${subject}\n\n${body}`;try{await navigator.clipboard.writeText(message);status.textContent='Email text copied. Paste it into a new email.'}catch{const ta=document.createElement('textarea');ta.value=message;document.body.append(ta);ta.select();try{document.execCommand('copy');status.textContent='Email text copied. Paste it into a new email.'}catch{status.textContent='Copy was blocked by your browser. Select the preview text and copy it manually.'}ta.remove()}});
