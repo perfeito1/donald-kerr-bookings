@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Donald Kerr — Journey Booking Request (V12)</title>
+<title>Donald Kerr — Journey Booking Request (V13)</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#203047;background:#f3f6fa}*{box-sizing:border-box}body{margin:0;padding:20px}main{max-width:850px;margin:auto}header{margin-bottom:20px}h1{font-size:1.7rem;margin:0 0 8px}h2{font-size:1.15rem;margin:0 0 14px}.sub{color:#516178;margin:0}.panel{background:white;border:1px solid #dbe2eb;border-radius:12px;padding:20px;margin:14px 0;box-shadow:0 2px 8px #132b4710}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.full{grid-column:1/-1}label{display:block;font-weight:650;font-size:.94rem;margin-bottom:5px}input,select,textarea{font:inherit;width:100%;padding:11px;border:1px solid #aebacc;border-radius:7px;background:#fff;color:#203047}textarea{min-height:75px;resize:vertical}.help{font-size:.85rem;color:#53647b;margin:5px 0 0}button{font:inherit;cursor:pointer;border-radius:8px;padding:12px 16px;border:1px solid #a5b6c8;background:#fff;color:#173452;font-weight:650}button.primary{background:#145eaa;border-color:#145eaa;color:#fff}button.danger{color:#9a2b2b;border-color:#d9b5b5}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.journeyhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.journeyhead h2{margin:0}.journeyhead button{padding:7px 10px}.preview{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fb;border:1px solid #dce4ee;padding:15px;border-radius:8px;font:14px/1.55 ui-monospace,Consolas,monospace}.notice{padding:12px 15px;border-radius:8px;background:#edf5fc;color:#264c72}.status{min-height:1.5em;color:#245f34;font-weight:600}@media(max-width:600px){body{padding:12px}.panel{padding:15px}.grid{grid-template-columns:1fr}.full{grid-column:auto}h1{font-size:1.4rem}}
 .address-combo{position:relative;display:flex;gap:5px}.address-combo input{min-width:0;flex:1}.address-toggle{padding:8px 12px;flex:none;font-size:1.15rem}.address-options{position:absolute;top:100%;left:0;right:0;z-index:20;background:white;border:1px solid #9caec5;border-radius:7px;box-shadow:0 5px 16px #10203030;max-height:220px;overflow-y:auto;margin-top:3px}.address-options[hidden]{display:none}.address-options button{display:block;text-align:left;width:100%;border:0;border-radius:0;padding:11px;font-weight:400;overflow-wrap:anywhere}.address-options button:hover,.address-options button:focus{background:#e7f1fc}
@@ -72,25 +72,28 @@ function build(){
  const requester=clean(document.getElementById('requester').value)||'[requester not entered]';
  const mobile=clean(document.getElementById('mobile').value);
  const m=mode(),kind=m==='new'?'New Booking':m==='change'?'Change Existing Booking':'Cancel Existing Booking';
- const blocks=[`Request type: ${kind}`,`Booking request for: ${passenger}`,`Requested by: ${requester}`,`Passenger mobile: ${mobile||'[not supplied]'}`,''];
+ const blocks=[`Request type: ${kind}`,`Booking request for: ${passenger}`,`Requested by: ${requester}`,''];
  [...holder.children].forEach((el,i)=>{
   blocks.push(`${m==='new'?'Journey':m==='change'?'Booking change':'Booking cancellation'} ${i+1}`);
   if(m!=='new'){
    blocks.push(`Original Booking Date: ${niceDate(field(el,'original-date').value)}`);
    blocks.push(`Original Pickup Time: ${field(el,'original-time').value||'[time not entered]'}`);
   }
-  // Existing TBR V3 extractor expects Date and Pickup Time even for cancellations.
-  // For cancellations, repeat ORIGINAL details under those headings; never imply a new journey.
+  // Preserve labels expected by the existing booking email extractor.
   const date=m==='cancel'?field(el,'original-date').value:field(el,'date').value;
   const time=m==='cancel'?field(el,'original-time').value:field(el,'time').value;
-  blocks.push(`Date: ${niceDate(date)}`,`From: ${route(el,'from')}`,`To: ${route(el,'to')}`,`Pickup Time: ${time||'[time not entered]'}`);
+  blocks.push(`Date: ${niceDate(date)}`);
+  blocks.push(`Pickup Time: ${time||'[time not entered]'}`);
+  blocks.push(`Passenger Name: ${passenger}`);
+  blocks.push(`Telephone: ${mobile||'[not supplied]'}`);
+  blocks.push(`From: ${route(el,'from')}`);
+  blocks.push(`To: ${route(el,'to')}`);
   const service=clean(field(el,'service').value),notes=clean(field(el,'notes').value);
   if(service)blocks.push(`Flight / train number: ${service}`);
   if(notes)blocks.push(`Notes: ${notes}`);
   blocks.push('');
  });
  blocks.push(m==='new'?'Please confirm availability and booking details.':m==='change'?'Please confirm whether the requested booking changes can be accommodated.':'Please confirm whether the booking cancellation has been accepted.');
- blocks.push('', 'Thank you.', '', 'Regards', '', 'Jo McBride', 'Assistant Company Secretary; EA to the CEO & CFO', 'D: 0116 402 9137');
  return {subject:`${passenger} — ${m==='new'?'Journey booking request':m==='change'?'Booking change request':'Booking cancellation request'}`,body:blocks.join('\n')};
 }
 function refresh(){[...holder.children].forEach((el,i)=>{field(el,'num').textContent=i+1;field(el,'remove').hidden=holder.children.length===1});updateMode();preview.textContent=build().body;status.textContent=''}
